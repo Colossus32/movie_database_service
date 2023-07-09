@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: createMovieTable
+      author: Colossus
+      createTable:
+        tableName: _movies
+        columns:
+          - column:
+              name: kinopoiskId
+              type: INT
+              constraints:
+                primaryKey: true
+                nullable: false
+          - column:
+              name: nameEn
+              type: VARCHAR(255)
+              constraints:
+                nullable: false
+          - column:
+              name: nameRu
+              type: VARCHAR(255)
+              constraints:
+                nullable: false
+          - column:
+              name: posterUrl
+              type: VARCHAR(255)
+              constraints:
+                nullable: false
+                unique: true

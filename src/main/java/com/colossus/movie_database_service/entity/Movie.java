@@ -1,8 +1,6 @@
 package com.colossus.movie_database_service.entity;
 
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import javax.persistence.Column;
@@ -12,7 +10,6 @@ import javax.persistence.Table;
 
 @Entity
 @Data
-@NoArgsConstructor
 @RequiredArgsConstructor
 @Table(name = "_movies")
 public class Movie {

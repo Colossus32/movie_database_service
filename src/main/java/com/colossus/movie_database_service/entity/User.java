@@ -1,6 +1,5 @@
 package com.colossus.movie_database_service.entity;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -11,7 +10,6 @@ import java.util.List;
 
 @Entity
 @Data
-@Builder
 @RequiredArgsConstructor
 @Table(name = "_users")
 public class User {
