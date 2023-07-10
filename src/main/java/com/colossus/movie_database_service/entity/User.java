@@ -27,6 +27,8 @@ public class User {
 
     private String name;
 
+    private String password;
+
     @ElementCollection
     private List<Integer> moviesList;
 }

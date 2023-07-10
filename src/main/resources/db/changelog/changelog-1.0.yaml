@@ -26,3 +26,9 @@ databaseChangeLog:
           - column:
               name: name
               type: VARCHAR(255)
+          - column:
+              name: password
+              type: VARCHAR(255)
+          - column:
+              name: movies_list
+              type: JSONB
