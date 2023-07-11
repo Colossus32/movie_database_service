@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: removePasswordColumn
+      author: Colossus
+      change:
+        - dropColumn:
+            tableName: _users
+            columnName: password
