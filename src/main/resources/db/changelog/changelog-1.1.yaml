@@ -16,11 +16,13 @@ databaseChangeLog:
               type: VARCHAR(255)
               constraints:
                 nullable: false
+                unique: true
           - column:
               name: nameRu
               type: VARCHAR(255)
               constraints:
                 nullable: false
+                unique: true
           - column:
               name: posterUrl
               type: VARCHAR(255)
