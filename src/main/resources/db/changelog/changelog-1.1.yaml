@@ -12,12 +12,6 @@ databaseChangeLog:
                 primaryKey: true
                 nullable: false
           - column:
-              name: nameEn
-              type: VARCHAR(255)
-              constraints:
-                nullable: false
-                unique: true
-          - column:
               name: nameRu
               type: VARCHAR(255)
               constraints:

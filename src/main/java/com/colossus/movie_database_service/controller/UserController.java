@@ -5,6 +5,7 @@ import com.colossus.movie_database_service.dto.UserInfoDTO;
 import com.colossus.movie_database_service.entity.User;
 import com.colossus.movie_database_service.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService service;
@@ -24,7 +26,10 @@ public class UserController {
         if(service.isCorrectUserForSave(user)) {
             service.saveUser(user);
             return ResponseEntity.ok(user);
-        } else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } else {
+            log.error("Error to register user:\n{}", user);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 
     @GetMapping("/{id}")
@@ -32,11 +37,17 @@ public class UserController {
             @RequestHeader("User-Id") long headerId,
             @PathVariable("id") long id) {
 
-        if (headerId != id) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        if (headerId != id) {
+            log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
 
         Optional<User> optionalUser = service.getUserById(id);
 
-        if (optionalUser.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        if (optionalUser.isEmpty()) {
+            log.error("Error to get info from user with id {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
 
         User userFromDatabase = optionalUser.get();
         UserInfoDTO userInfo = new UserInfoDTO(
@@ -55,11 +66,17 @@ public class UserController {
             @PathVariable long id,
             @RequestBody UserEditDTO userEditDTO) {
 
-        if (headerId != id) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        if (headerId != id) {
+            log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
 
         Optional<User> optionalUser = service.getUserById(id);
 
-        if (optionalUser.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        if (optionalUser.isEmpty()) {
+            log.error("Error to update info for user with id {}", id);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
 
         User fromDatabase = optionalUser.get();
 
@@ -76,11 +93,17 @@ public class UserController {
             @RequestHeader("User-Id") long headerId,
             @PathVariable("id") long id) {
 
-        if (headerId != id) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (headerId != id) {
+            log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         Optional<User> userFromDatabase = service.getUserById(id);
 
-        if (userFromDatabase.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        if (userFromDatabase.isEmpty()) {
+            log.error("Error to delete user with id {}", id);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
 
         service.deleteUserById(id);
 
