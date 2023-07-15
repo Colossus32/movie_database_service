@@ -1,7 +1,9 @@
 package com.colossus.movie_database_service.service;
 
+import com.colossus.movie_database_service.entity.Movie;
 import com.colossus.movie_database_service.entity.User;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
@@ -12,4 +14,6 @@ public interface UserService {
     Optional<User> getUserById(long id);
 
     void deleteUserById(long id);
+
+    List<Movie> getAllMoviesWithPagination(Integer page, Integer quantity);
 }

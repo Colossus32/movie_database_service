@@ -20,6 +20,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -29,7 +31,7 @@ import java.util.List;
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository repository;
 
-    @Scheduled(cron = "0 0 */3 * * *")
+    @Scheduled(cron = "*/10 * * * * *")
     @Override
     public void checkPremiers() {
 
@@ -64,6 +66,22 @@ public class MovieServiceImpl implements MovieService {
             log.error("Error with response from kinopoisk api.");
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<Movie> getMoviesWithPagination(int page, int quantity) {
+
+        List<Movie> listFromDatabase = repository.findAll();
+        Collections.reverse(listFromDatabase);
+
+        //bcz index in list starts from 0
+        int start = page * (quantity - 1) - 1;
+
+        if (start >= listFromDatabase.size()) return new ArrayList<>();
+
+        int end = start + quantity >= listFromDatabase.size() ? listFromDatabase.size() - 1 : start + quantity;
+
+        return listFromDatabase.subList(start, end);
     }
 
     private String getApikey() {

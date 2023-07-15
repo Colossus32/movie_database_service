@@ -2,6 +2,7 @@ package com.colossus.movie_database_service.controller;
 
 import com.colossus.movie_database_service.dto.UserEditDTO;
 import com.colossus.movie_database_service.dto.UserInfoDTO;
+import com.colossus.movie_database_service.entity.Movie;
 import com.colossus.movie_database_service.entity.User;
 import com.colossus.movie_database_service.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -19,6 +21,7 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService service;
+
 
     @PostMapping("/registrations")
     public ResponseEntity<User> userRegistration(@RequestBody User user) {
@@ -108,5 +111,20 @@ public class UserController {
         service.deleteUserById(id);
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/movies")
+    public ResponseEntity<List<Movie>> getAllMovies(
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "quantity", required = false) Integer quantity) {
+
+        if (page == null && quantity == null) {
+            page = 1;
+            quantity = 15;
+        }
+        if((page == null || quantity == null)) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        if (page <= 0 || quantity <= 0) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+
+        return ResponseEntity.ok(service.getAllMoviesWithPagination(page, quantity));
     }
 }
