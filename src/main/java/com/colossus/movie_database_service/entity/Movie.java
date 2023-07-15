@@ -16,7 +16,7 @@ import javax.persistence.Table;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Movie {
     @Id
-    private int kinopoiskId;
+    private long kinopoiskId;
 
     @Column(nullable = false, unique = true)
     private String nameRu;

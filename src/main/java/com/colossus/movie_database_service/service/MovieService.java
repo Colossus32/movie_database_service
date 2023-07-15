@@ -8,4 +8,6 @@ public interface MovieService {
     void checkPremiers();
 
     List<Movie> getMoviesWithPagination(int page, int quantity);
+
+    String checkCorrectMoviesIds(String listOfMoviesIds);
 }

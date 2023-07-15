@@ -5,7 +5,6 @@ import com.colossus.movie_database_service.entity.User;
 import com.colossus.movie_database_service.repository.UserRepository;
 import com.colossus.movie_database_service.service.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +16,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,10 +74,46 @@ public class UserServiceImpl implements UserService {
             HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(response.body(), new TypeReference<List<Movie>>() {});
+            return mapper.readValue(response.body(), new TypeReference<>() {});
 
         } catch (IOException | InterruptedException e) {
             log.error("Error with call to movie service to get all with pagination");
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void addMoviesToFavorites(long id, List<Long> listOfMoviesIds) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < listOfMoviesIds.size(); i++) {
+            if (i != listOfMoviesIds.size() - 1) builder.append(listOfMoviesIds.get(i)).append('_');
+            else builder.append(listOfMoviesIds.get(i));
+        }
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(String.format("http://localhost:%s/api/%s/movies/checkers?ids=%s", PORT, API_VERSION,builder)))
+                .GET()
+                .build();
+        try {
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            String[] idsFromResponse = response.body().split("_");
+            List<Long> correctMovieIds = new ArrayList<>();
+
+            for (String correctMovieId : idsFromResponse) correctMovieIds.add(Long.parseLong(correctMovieId));
+
+            Optional<User> userOptional = repository.findById(id);
+            if (userOptional.isEmpty()) log.error("user {} is not found in database", id);
+            else {
+                User fromDatabase = userOptional.get();
+                List<Long> existedListOfMovies = fromDatabase.getMoviesList();
+                for (Long canBeDuplicated : correctMovieIds) if (!existedListOfMovies.contains(canBeDuplicated)) {
+                    existedListOfMovies.add(canBeDuplicated);
+                }
+                fromDatabase.setMoviesList(existedListOfMovies);
+                repository.save(fromDatabase);
+            }
+
+        } catch (IOException | InterruptedException e) {
+            log.error("Error with adding movies to user {} favorites", id);
             throw new RuntimeException(e);
         }
     }

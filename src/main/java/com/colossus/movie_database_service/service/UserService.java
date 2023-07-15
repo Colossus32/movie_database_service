@@ -16,4 +16,6 @@ public interface UserService {
     void deleteUserById(long id);
 
     List<Movie> getAllMoviesWithPagination(Integer page, Integer quantity);
+
+    void addMoviesToFavorites(long id, List<Long> listOfMovies);
 }

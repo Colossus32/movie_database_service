@@ -26,7 +26,7 @@ public class User {
     private String name;
 
     @ElementCollection
-    private List<Integer> moviesList;
+    private List<Long> moviesList;
 
     public User(String email, String username) {
         this.email = email;

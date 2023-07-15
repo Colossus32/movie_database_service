@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +32,9 @@ import java.util.List;
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository repository;
 
-    @Scheduled(cron = "*/10 * * * * *")
+    //@Scheduled(cron = "${cron.prod}")
+    @Scheduled(cron = "${cron.test}")
+
     @Override
     public void checkPremiers() {
 
@@ -75,13 +78,28 @@ public class MovieServiceImpl implements MovieService {
         Collections.reverse(listFromDatabase);
 
         //bcz index in list starts from 0
-        int start = page * (quantity - 1) - 1;
+        int start = page * quantity - 1;
 
         if (start >= listFromDatabase.size()) return new ArrayList<>();
 
         int end = start + quantity >= listFromDatabase.size() ? listFromDatabase.size() - 1 : start + quantity;
 
         return listFromDatabase.subList(start, end);
+    }
+
+    @Override
+    public String checkCorrectMoviesIds(String listOfMoviesIds) {
+        List<Long> request = new ArrayList<>();
+        String[] listOfRequestedMoviesIds = listOfMoviesIds.split("_");
+
+        for (String movieId : listOfRequestedMoviesIds) request.add(Long.parseLong(movieId));
+
+        StringBuilder builder = new StringBuilder();
+        for (Long requestedId : request) {
+            Optional<Movie> movieOptional = repository.findById(requestedId);
+            movieOptional.ifPresent(movie -> builder.append(movie.getKinopoiskId()).append("_"));
+        }
+        return builder.substring(0, builder.length() - 1);
     }
 
     private String getApikey() {
