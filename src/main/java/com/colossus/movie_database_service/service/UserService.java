@@ -18,4 +18,6 @@ public interface UserService {
     List<Movie> getAllMoviesWithPagination(Integer page, Integer quantity);
 
     void addMoviesToFavorites(long id, List<Long> listOfMovies);
+
+    void removeFavoritesMovies(long id, List<Long> listOfMovies);
 }

@@ -117,4 +117,17 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void removeFavoritesMovies(long id, List<Long> listOfMovies) {
+        Optional<User> optionalUser = repository.findById(id);
+        if (optionalUser.isEmpty()) log.error("user {} is not found in database", id);
+        else {
+            User userFromDatabase = optionalUser.get();
+            List<Long> usersFavoritesMovies = userFromDatabase.getMoviesList();
+            for (Long movieId : listOfMovies) usersFavoritesMovies.remove(movieId);
+            userFromDatabase.setMoviesList(usersFavoritesMovies);
+            repository.save(userFromDatabase);
+        }
+    }
 }

@@ -132,6 +132,26 @@ public class UserController {
             service.addMoviesToFavorites(id, listOfMovies);
             return ResponseEntity.ok().build();
         }
+    }
+    @DeleteMapping("{id}/favorites")
+    public ResponseEntity removeFavorites(@RequestHeader("User-Id") long headerId,
+                                         @PathVariable("id") long id,
+                                         @RequestBody List<Long> listOfMovies) {
+
+        if (headerId != id) {
+            log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<User> userFromDatabase = service.getUserById(id);
+
+        if (userFromDatabase.isEmpty()) {
+            log.error("Error to add movies to user with id {}", id);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } else {
+            service.removeFavoritesMovies(id, listOfMovies);
+            return ResponseEntity.ok().build();
+        }
 
     }
 

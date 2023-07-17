@@ -7,7 +7,7 @@ databaseChangeLog:
         columns:
           - column:
               name: kinopoiskId
-              type: INT
+              type: BIGINT
               constraints:
                 primaryKey: true
                 nullable: false
