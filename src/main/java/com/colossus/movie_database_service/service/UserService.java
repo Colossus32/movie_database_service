@@ -20,4 +20,6 @@ public interface UserService {
     void addMoviesToFavorites(long id, List<Long> listOfMovies);
 
     void removeFavoritesMovies(long id, List<Long> listOfMovies);
+
+    List<Movie> discoverMovies(long id, String loaderType);
 }

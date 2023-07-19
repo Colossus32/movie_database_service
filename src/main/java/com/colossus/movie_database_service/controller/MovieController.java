@@ -19,8 +19,8 @@ import java.util.List;
 public class MovieController {
     private final MovieService service;
 
-    @GetMapping("/all")
-    public ResponseEntity<List<Movie>> getAllMovies(
+    @GetMapping("/paging")
+    public ResponseEntity<List<Movie>> getPaging(
             @RequestParam("page") int page,
             @RequestParam("quantity") int quantity
     ) {
@@ -36,4 +36,8 @@ public class MovieController {
         return ResponseEntity.ok(correctIds);
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<Movie>> getAllMovies() {
+        return service.getAllMovies();
+    }
 }

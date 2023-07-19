@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -16,9 +18,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Value("${server.port}")
     private String PORT;
@@ -65,7 +68,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Movie> getAllMoviesWithPagination(Integer page, Integer quantity) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(String.format("http://localhost:%s/api/%s/movies/all?page=%d&quantity=%d",
+                .uri(URI.create(String.format("http://localhost:%s/api/%s/movies/paging?page=%d&quantity=%d",
                         PORT, API_VERSION, page, quantity)))
                 .GET()
                 .build();
@@ -84,15 +87,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addMoviesToFavorites(long id, List<Long> listOfMoviesIds) {
+
         StringBuilder builder = new StringBuilder();
+
         for (int i = 0; i < listOfMoviesIds.size(); i++) {
+
             if (i != listOfMoviesIds.size() - 1) builder.append(listOfMoviesIds.get(i)).append('_');
+
             else builder.append(listOfMoviesIds.get(i));
         }
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(String.format("http://localhost:%s/api/%s/movies/checkers?ids=%s", PORT, API_VERSION,builder)))
                 .GET()
                 .build();
+
         try {
             HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
             String[] idsFromResponse = response.body().split("_");
@@ -101,7 +110,9 @@ public class UserServiceImpl implements UserService {
             for (String correctMovieId : idsFromResponse) correctMovieIds.add(Long.parseLong(correctMovieId));
 
             Optional<User> userOptional = repository.findById(id);
+
             if (userOptional.isEmpty()) log.error("user {} is not found in database", id);
+
             else {
                 User fromDatabase = userOptional.get();
                 List<Long> existedListOfMovies = fromDatabase.getMoviesList();
@@ -120,14 +131,78 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void removeFavoritesMovies(long id, List<Long> listOfMovies) {
+
         Optional<User> optionalUser = repository.findById(id);
+
         if (optionalUser.isEmpty()) log.error("user {} is not found in database", id);
+
         else {
             User userFromDatabase = optionalUser.get();
             List<Long> usersFavoritesMovies = userFromDatabase.getMoviesList();
+
             for (Long movieId : listOfMovies) usersFavoritesMovies.remove(movieId);
+
             userFromDatabase.setMoviesList(usersFavoritesMovies);
+
             repository.save(userFromDatabase);
+        }
+    }
+
+    @Override
+    public List<Movie> discoverMovies(long id, String loaderType) {
+
+        Optional<User> optionalUser = repository.findById(id);
+
+        if (optionalUser.isEmpty()) return null;
+
+        if (loaderType.equals("inMemory")) return discoverInMemory(optionalUser.get());
+
+        else return discoverSql(optionalUser.get());
+    }
+
+    private List<Movie> discoverSql(User user) {
+
+        Object[] params = user.getMoviesList().toArray();
+
+        StringBuilder questionQuantity = new StringBuilder("?");
+
+        questionQuantity.append(",?".repeat(params.length - 1));
+
+        String sql =String.format("SELECT kinopoisk_id, name_ru, poster_url FROM _movies WHERE kinopoisk_id NOT IN (%s)", questionQuantity) ;
+
+
+        return jdbcTemplate.query(sql, params,
+                (rs, rowNum) -> new Movie(
+                        rs.getLong("kinopoisk_id"),
+                        rs.getString("name_ru"),
+                        rs.getString("poster_url")));
+    }
+
+    private List<Movie> discoverInMemory(User user) {
+
+        List<Movie> allMoviesFromDatabase = getAllMoviesFromDatabase();
+        Set<Long> discoveredMoviesIds = new HashSet<>(user.getMoviesList());
+        Set<Movie> result = new HashSet<>();
+
+        for (Movie movie : allMoviesFromDatabase) if (!discoveredMoviesIds.contains(movie.getKinopoiskId())) result.add(movie);
+
+        return new LinkedList<>(result);
+    }
+    private List<Movie> getAllMoviesFromDatabase() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(String.format("http://localhost:%s/api/%s/movies/all", PORT, API_VERSION)))
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            ObjectMapper mapper = new ObjectMapper();
+
+            return mapper.readValue(response.body(), new TypeReference<>() {});
+
+        } catch (IOException | InterruptedException e) {
+            log.error("Error with response from movies/all ");
+            throw new RuntimeException(e);
         }
     }
 }

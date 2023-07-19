@@ -1,6 +1,7 @@
 package com.colossus.movie_database_service.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -12,6 +13,7 @@ import javax.persistence.Table;
 @Entity
 @Data
 @RequiredArgsConstructor
+@AllArgsConstructor
 @Table(name = "_movies")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Movie {

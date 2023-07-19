@@ -169,4 +169,23 @@ public class UserController {
 
         return ResponseEntity.ok(service.getAllMoviesWithPagination(page, quantity));
     }
+
+    @GetMapping("/discover/{id}")
+    public ResponseEntity<List<Movie>> discoverMovies(@RequestHeader("User-Id") long headerId,
+                                      @PathVariable long id,
+                                      @RequestParam(value = "loaderType") String loaderType) {
+
+        if (headerId != id) {
+            log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (service.getUserById(id).isEmpty()) {
+            log.error("Error to get user with id {} in discover", id);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        if (loaderType.equals("inMemory") || loaderType.equals("sql")) return ResponseEntity.ok(service.discoverMovies(id,loaderType));
+        else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    }
 }

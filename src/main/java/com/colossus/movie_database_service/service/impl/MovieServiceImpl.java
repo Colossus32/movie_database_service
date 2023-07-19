@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -100,6 +101,11 @@ public class MovieServiceImpl implements MovieService {
             movieOptional.ifPresent(movie -> builder.append(movie.getKinopoiskId()).append("_"));
         }
         return builder.substring(0, builder.length() - 1);
+    }
+
+    @Override
+    public ResponseEntity<List<Movie>> getAllMovies() {
+        return ResponseEntity.ok(repository.findAll());
     }
 
     private String getApikey() {
