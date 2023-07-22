@@ -160,10 +160,13 @@ public class UserServiceImpl implements UserService {
     private List<Movie> discoverSql(User user) {
 
         Object[] params = user.getMoviesList().toArray();
+        if (params.length == 0) return getAllMoviesFromDatabase();
 
-        StringBuilder questionQuantity = new StringBuilder("?");
+        StringBuilder builder = new StringBuilder();
 
-        questionQuantity.append(",?".repeat(params.length - 1));
+        String questionQuantity =  builder
+                .append(",?".repeat(params.length))
+                .substring(1, builder.length());
 
         String sql =String.format("SELECT kinopoisk_id, name_ru, poster_url FROM _movies WHERE kinopoisk_id NOT IN (%s)", questionQuantity) ;
 

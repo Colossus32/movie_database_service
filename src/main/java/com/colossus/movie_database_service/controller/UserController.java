@@ -25,9 +25,10 @@ public class UserController {
 
     @PostMapping("/registrations")
     public ResponseEntity<User> userRegistration(@RequestBody User user) {
-
+        log.info("users/registrations got: {}", user.toString());
         if(service.isCorrectUserForSave(user)) {
             service.saveUser(user);
+            log.info("users/registrations gave: {}, status.OK", user);
             return ResponseEntity.ok(user);
         } else {
             log.error("Error to register user:\n{}", user);
@@ -39,6 +40,8 @@ public class UserController {
     public ResponseEntity<UserInfoDTO> getUserInformation(
             @RequestHeader("User-Id") long headerId,
             @PathVariable("id") long id) {
+
+        log.info("GET users/{} got: header {}\n", id, headerId);
 
         if (headerId != id) {
             log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
@@ -59,7 +62,7 @@ public class UserController {
                 userFromDatabase.getUsername(),
                 userFromDatabase.getName()
         );
-
+        log.info("GET users/{} gave: userInfoDTO {}, status.OK", id, userInfo);
         return ResponseEntity.ok(userInfo);
     }
 
@@ -68,6 +71,8 @@ public class UserController {
             @RequestHeader("User-Id") long headerId,
             @PathVariable long id,
             @RequestBody UserEditDTO userEditDTO) {
+
+        log.info("PUT users/{} got: header {}, UserEditDTO {}", id, headerId, userEditDTO);
 
         if (headerId != id) {
             log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
@@ -88,6 +93,8 @@ public class UserController {
 
         service.saveUser(fromDatabase);
 
+        log.info("PUT users/{} gave: header {}, UserEditDTO {}, status.OK", id, headerId, userEditDTO);
+
         return ResponseEntity.ok(userEditDTO);
     }
 
@@ -95,6 +102,8 @@ public class UserController {
     public ResponseEntity deleteUser(
             @RequestHeader("User-Id") long headerId,
             @PathVariable("id") long id) {
+
+        log.info("DELETE users/{} got: header {}", id, headerId);
 
         if (headerId != id) {
             log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
@@ -110,6 +119,8 @@ public class UserController {
 
         service.deleteUserById(id);
 
+        log.info("DELETE users/{} gave: header {}, status.OK", id, headerId);
+
         return ResponseEntity.ok().build();
     }
 
@@ -117,6 +128,8 @@ public class UserController {
     public ResponseEntity addToFavorites(@RequestHeader("User-Id") long headerId,
                                            @PathVariable("id") long id,
                                            @RequestBody List<Long> listOfMovies) {
+
+        log.info("POST users/{}/favorites got: header {}, body {}", id, headerId, listOfMovies);
 
         if (headerId != id) {
             log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
@@ -130,6 +143,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } else {
             service.addMoviesToFavorites(id, listOfMovies);
+            log.info("POST users/{}/favorites gave: header {}, status.OK", id, headerId);
             return ResponseEntity.ok().build();
         }
     }
@@ -137,6 +151,8 @@ public class UserController {
     public ResponseEntity removeFavorites(@RequestHeader("User-Id") long headerId,
                                          @PathVariable("id") long id,
                                          @RequestBody List<Long> listOfMovies) {
+
+        log.info("DELETE users/{}/favorites got: header {}, body {}", id, headerId, listOfMovies);
 
         if (headerId != id) {
             log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
@@ -150,6 +166,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } else {
             service.removeFavoritesMovies(id, listOfMovies);
+            log.info("DELETE users/{}/favorites gave: header {}, status.OK", id, headerId);
             return ResponseEntity.ok().build();
         }
 
@@ -160,6 +177,8 @@ public class UserController {
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "quantity", required = false) Integer quantity) {
 
+        log.info("GET users/movies got: page {}, quantity {}", page, quantity);
+
         if (page == null && quantity == null) {
             page = 1;
             quantity = 15;
@@ -167,13 +186,17 @@ public class UserController {
         if((page == null || quantity == null)) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         if (page <= 0 || quantity <= 0) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 
-        return ResponseEntity.ok(service.getAllMoviesWithPagination(page, quantity));
+        List<Movie> result = service.getAllMoviesWithPagination(page, quantity);
+        log.info("GET users/movies gave: quantity of movies {}, status.OK", result.size());
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/discover/{id}")
     public ResponseEntity<List<Movie>> discoverMovies(@RequestHeader("User-Id") long headerId,
                                       @PathVariable long id,
                                       @RequestParam(value = "loaderType") String loaderType) {
+
+        log.info("GET users/discover/{} got: header {}, loaderType {}", id, headerId, loaderType);
 
         if (headerId != id) {
             log.error("Error to get user info bcz header User-Id doesn't equal requested id:\n{} - {}", headerId, id);
@@ -185,7 +208,15 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        if (loaderType.equals("inMemory") || loaderType.equals("sql")) return ResponseEntity.ok(service.discoverMovies(id,loaderType));
-        else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        if (loaderType.equals("inMemory") || loaderType.equals("sql")) {
+            List<Movie> result = service.discoverMovies(id,loaderType);
+            log.info("GET users/discover/{} gave: header {}, loaderType {}, result's size {}, status.OK",
+                    id, headerId, loaderType, result.size());
+            return ResponseEntity.ok(result);
+        }
+        else {
+            log.error("GET users/discover/{} error: header {}, loaderType {}", id, headerId, loaderType);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 }

@@ -24,20 +24,26 @@ public class MovieController {
             @RequestParam("page") int page,
             @RequestParam("quantity") int quantity
     ) {
-        return ResponseEntity.ok(service.getMoviesWithPagination(page, quantity));
+        log.info("GET movies/paging got: page {}, quantity {}", page, quantity);
+        List<Movie> result = service.getMoviesWithPagination(page, quantity);
+        log.info("GET movies/paging gave: page {}, quantity {}, result's size {}, status.OK", page, quantity, result.size());
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/checkers")
     public ResponseEntity<String> checkExistedMovies(@RequestParam("ids") String listOfMoviesIds) {
+        log.info("GET movies/checkers got: ids {}", listOfMoviesIds);
         String correctIds = service.checkCorrectMoviesIds(listOfMoviesIds);
         if (!correctIds.equals(listOfMoviesIds)) {
             log.warn("Some of favorites movies ids aren't found in movie database\n{}\n{}", listOfMoviesIds, correctIds);
         }
+        log.info("GET movies/checkers gave: correct ids {}, status.OK", correctIds);
         return ResponseEntity.ok(correctIds);
     }
 
     @GetMapping("/all")
     public ResponseEntity<List<Movie>> getAllMovies() {
+        log.info("GET movies/all");
         return service.getAllMovies();
     }
 }
