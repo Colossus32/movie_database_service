@@ -39,6 +39,8 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void checkPremiers() {
 
+        log.info("Getting movies premiers...");
+
         String apikey = getApikey();
 
         LocalDate localDate = LocalDate.now();
